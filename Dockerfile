@@ -1,36 +1,26 @@
-# Multi-stage Dockerfile for Next.js production build
+FROM node:24-alpine
 
-FROM node:24-alpine AS deps
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --no-audit --no-fund
-
-FROM node:24-alpine AS builder
-WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run build
-
-FROM node:24-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1 \
-    PORT=3000
-
-# Install only production dependencies
-COPY package*.json ./
-RUN npm ci --only=production --no-audit --no-fund
-
-# Copy built application
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./next.config.ts
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm ci --no-audit --no-fund && npm cache clean --force
+
+# Copy source code and build
+COPY . .
+RUN npm run build
+
+# Change ownership of the app directory to nextjs user
+RUN chown -R nextjs:nodejs /app
 USER nextjs
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000
 
 EXPOSE 3000
 CMD ["npm", "start"]
