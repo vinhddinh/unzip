@@ -2,7 +2,14 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { unzipRecursively } from "@/lib/unzip";
 import { zipFromMap } from "@/lib/zip";
@@ -40,8 +47,8 @@ export default function ZipUnzipper() {
       for (const [, data] of extracted) sum += data.byteLength;
       setTotalBytes(sum);
       setFiles(extracted);
-    } catch (e: any) {
-      setError(e?.message ?? String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
@@ -61,7 +68,9 @@ export default function ZipUnzipper() {
     if (!files) return;
     try {
       const zipBytes = zipFromMap(files);
-      const blob = new Blob([zipBytes.slice().buffer], { type: "application/zip" });
+      const blob = new Blob([zipBytes.slice().buffer], {
+        type: "application/zip",
+      });
       const a = document.createElement("a");
       const name = fileName ? fileName.replace(/\.zip$/i, "") : "archive";
       a.download = `unzipped-${name}.zip`;
@@ -70,12 +79,14 @@ export default function ZipUnzipper() {
       a.click();
       a.remove();
       URL.revokeObjectURL(a.href);
-    } catch (e: any) {
-      setError(e?.message ?? String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     }
   };
 
-  const entries = files ? Array.from(files.keys()).sort((a, b) => a.localeCompare(b)) : [];
+  const entries = files
+    ? Array.from(files.keys()).sort((a, b) => a.localeCompare(b))
+    : [];
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -83,7 +94,8 @@ export default function ZipUnzipper() {
         <CardHeader>
           <CardTitle>Recursive ZIP Unzipper</CardTitle>
           <CardDescription>
-            Client-side only. Drop a .zip; nested zips auto-extract into a flat folder structure.
+            Client-side only. Drop a .zip; nested zips auto-extract into a flat
+            folder structure.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,11 +108,15 @@ export default function ZipUnzipper() {
             onDrop={handleDrop}
             className={
               "border-2 border-dashed rounded-lg p-8 text-center transition-colors " +
-              (dragOver ? "border-black dark:border-white bg-neutral-50 dark:bg-neutral-900" : "border-neutral-300 dark:border-neutral-700")
+              (dragOver
+                ? "border-black dark:border-white bg-neutral-50 dark:bg-neutral-900"
+                : "border-neutral-300 dark:border-neutral-700")
             }
           >
             <p className="mb-3 font-medium">Drag and drop a .zip file here</p>
-            <p className="text-sm text-neutral-500 mb-4">or choose a file below</p>
+            <p className="text-sm text-neutral-500 mb-4">
+              or choose a file below
+            </p>
             <div className="flex items-center justify-center gap-2">
               <input
                 ref={fileInputRef}
@@ -112,26 +128,35 @@ export default function ZipUnzipper() {
                 }}
                 className="hidden"
               />
-              <Button onClick={() => fileInputRef.current?.click()}>Choose File</Button>
+              <Button onClick={() => fileInputRef.current?.click()}>
+                Choose File
+              </Button>
             </div>
             {fileName && (
-              <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Selected: {fileName}</p>
+              <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                Selected: {fileName}
+              </p>
             )}
           </div>
 
           {busy && (
-            <div className="mt-6 text-sm">Unzipping… This may take a moment.</div>
+            <div className="mt-6 text-sm">
+              Unzipping… This may take a moment.
+            </div>
           )}
 
           {error && (
-            <div className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</div>
+            <div className="mt-4 text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
           )}
 
           {files && !busy && (
             <div className="mt-6">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Extracted {entries.length} files • Total {formatBytes(totalBytes)}
+                  Extracted {entries.length} files • Total{" "}
+                  {formatBytes(totalBytes)}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button onClick={handleDownloadZip}>Download as ZIP</Button>
@@ -172,7 +197,8 @@ export default function ZipUnzipper() {
         </CardContent>
         <CardFooter>
           <div className="text-xs text-neutral-500">
-            Tip: Use “Download as ZIP” to get a single archive preserving structure.
+            Tip: Use “Download as ZIP” to get a single archive preserving
+            structure.
           </div>
         </CardFooter>
       </Card>

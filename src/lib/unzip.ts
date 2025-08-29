@@ -25,7 +25,9 @@ function findEOCD(view: DataView): { cdirOffset: number; cdirSize: number } {
       return { cdirOffset, cdirSize };
     }
   }
-  throw new Error("EOCD (end of central directory) not found. Not a valid ZIP?");
+  throw new Error(
+    "EOCD (end of central directory) not found. Not a valid ZIP?"
+  );
 }
 
 function readCString(view: DataView, offset: number, length: number): string {
@@ -34,19 +36,24 @@ function readCString(view: DataView, offset: number, length: number): string {
   return new TextDecoder().decode(bytes);
 }
 
-function parseCentralDirectory(view: DataView, cdirOffset: number, cdirSize: number): ZipEntry[] {
+function parseCentralDirectory(
+  view: DataView,
+  cdirOffset: number,
+  cdirSize: number
+): ZipEntry[] {
   const entries: ZipEntry[] = [];
   let p = cdirOffset;
   const end = cdirOffset + cdirSize;
   while (p < end) {
     const sig = view.getUint32(p, true);
-    if (sig !== SIG_CEN) throw new Error("Central directory corrupted at offset " + p);
-    const generalPurpose = view.getUint16(p + 8, true);
+    if (sig !== SIG_CEN)
+      throw new Error("Central directory corrupted at offset " + p);
+    // const generalPurpose = view.getUint16(p + 8, true);
     const method = view.getUint16(p + 10, true);
     // const lastModTime = view.getUint16(p + 12, true);
     // const lastModDate = view.getUint16(p + 14, true);
     // We use sizes from central directory to handle data-descriptor cases
-    const crc32 = view.getUint32(p + 16, true);
+    // const crc32 = view.getUint32(p + 16, true);
     const compressedSize = view.getUint32(p + 20, true);
     const uncompressedSize = view.getUint32(p + 24, true);
     const fileNameLen = view.getUint16(p + 28, true);
@@ -71,10 +78,15 @@ function parseCentralDirectory(view: DataView, cdirOffset: number, cdirSize: num
   return entries;
 }
 
-function dataOffsetFromLocalHeader(view: DataView, localHeaderOffset: number): number {
+function dataOffsetFromLocalHeader(
+  view: DataView,
+  localHeaderOffset: number
+): number {
   // local header structure: sig(4) ver(2) flag(2) method(2) time(2) date(2) crc(4) csize(4) usize(4) fnlen(2) extralen(2)
   if (view.getUint32(localHeaderOffset, true) !== SIG_LOC) {
-    throw new Error("Local file header not found at offset " + localHeaderOffset);
+    throw new Error(
+      "Local file header not found at offset " + localHeaderOffset
+    );
   }
   const nameLen = view.getUint16(localHeaderOffset + 26, true);
   const extraLen = view.getUint16(localHeaderOffset + 28, true);
@@ -97,7 +109,9 @@ async function inflateRaw(data: Uint8Array): Promise<Uint8Array> {
   }
 }
 
-export async function unzip(buffer: ArrayBuffer): Promise<Map<string, Uint8Array>> {
+export async function unzip(
+  buffer: ArrayBuffer
+): Promise<Map<string, Uint8Array>> {
   const view = new DataView(buffer);
   const { cdirOffset, cdirSize } = findEOCD(view);
   const entries = parseCentralDirectory(view, cdirOffset, cdirSize);
@@ -105,7 +119,11 @@ export async function unzip(buffer: ArrayBuffer): Promise<Map<string, Uint8Array
   for (const e of entries) {
     if (e.isDirectory) continue;
     const dataStart = dataOffsetFromLocalHeader(view, e.localHeaderOffset);
-    const comp = new Uint8Array(view.buffer, view.byteOffset + dataStart, e.compressedSize);
+    const comp = new Uint8Array(
+      view.buffer,
+      view.byteOffset + dataStart,
+      e.compressedSize
+    );
     let content: Uint8Array;
     if (e.method === 0) {
       content = new Uint8Array(comp);
@@ -134,11 +152,18 @@ export async function unzipRecursively(
       const normalized = name.replace(/^\/+/, "");
       if (normalized.endsWith("/")) continue; // skip dirs
       if (normalized.toLowerCase().endsWith(".zip")) {
-        const nestedBase = normalized.replace(/\/[^/]+$/, "/") +
-          normalized.split("/").pop()!.replace(/\.zip$/i, suffix || "");
+        const nestedBase =
+          normalized.replace(/\/[^/]+$/, "/") +
+          normalized
+            .split("/")
+            .pop()!
+            .replace(/\.zip$/i, suffix || "");
         const folder = nestedBase.replace(/\/$/, "");
         const copy = data.slice();
-        await processZip(copy.buffer, basePath ? `${basePath}/${folder}` : folder);
+        await processZip(
+          copy.buffer,
+          basePath ? `${basePath}/${folder}` : folder
+        );
       } else {
         const fullPath = basePath ? `${basePath}/${normalized}` : normalized;
         result.set(fullPath, data);
@@ -150,7 +175,10 @@ export async function unzipRecursively(
   return result;
 }
 
-export function groupByFolders(paths: string[]): { folders: Set<string>; files: string[] } {
+export function groupByFolders(paths: string[]): {
+  folders: Set<string>;
+  files: string[];
+} {
   const folders = new Set<string>();
   for (const p of paths) {
     const parts = p.split("/");

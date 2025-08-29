@@ -27,7 +27,7 @@ export function crc32(data: Uint8Array): number {
   if (!CRC_TABLE) makeCrcTable();
   let c = 0xffffffff;
   for (let i = 0; i < data.length; i++) {
-    c = (CRC_TABLE![((c ^ data[i]) & 0xff)] ^ (c >>> 8)) >>> 0;
+    c = (CRC_TABLE![(c ^ data[i]) & 0xff] ^ (c >>> 8)) >>> 0;
   }
   return (c ^ 0xffffffff) >>> 0;
 }
@@ -41,7 +41,7 @@ type CentralRecord = {
   isDirectory: boolean;
 };
 
-function dosTimeDate(date = new Date()) {
+function dosTimeDate() {
   // Optional: pack JS date to DOS time/date fields.
   // Many tools ignore for store-only; we can set zero.
   return { time: 0, date: 0 };
@@ -104,7 +104,14 @@ export function zipFromMap(files: Map<string, Uint8Array>): Uint8Array {
       chunks.push(content);
       offset += content.byteLength;
     }
-    central.push({ nameBytes, crc, csize, usize, offset: locOffset, isDirectory });
+    central.push({
+      nameBytes,
+      crc,
+      csize,
+      usize,
+      offset: locOffset,
+      isDirectory,
+    });
   };
 
   // Write directories first
@@ -112,14 +119,23 @@ export function zipFromMap(files: Map<string, Uint8Array>): Uint8Array {
     writeLocal(d, null);
   }
   // Then files
-  for (const [name, data] of Array.from(files.entries()).sort((a, b) => a[0].localeCompare(b[0]))) {
+  for (const [name, data] of Array.from(files.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  )) {
     writeLocal(name, data);
   }
 
   const centralStart = offset;
   // Central directory records
   for (const rec of central) {
-    const { nameBytes, crc, csize, usize, offset: locOffset, isDirectory } = rec;
+    const {
+      nameBytes,
+      crc,
+      csize,
+      usize,
+      offset: locOffset,
+      isDirectory,
+    } = rec;
     const { time, date } = dosTimeDate();
     const hdr = new Uint8Array(46);
     const dv = new DataView(hdr.buffer);
@@ -172,4 +188,3 @@ export function zipFromMap(files: Map<string, Uint8Array>): Uint8Array {
   }
   return out;
 }
-
