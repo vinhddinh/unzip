@@ -4,9 +4,10 @@ import ZipUnzipper from "@/components/zip-unzipper";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 sm:p-10">
-      <h1 className="text-2xl font-bold mb-6">Unzip</h1>
-      <ZipUnzipper />
-    </div>
+    <main className="flex-1 min-h-0 overflow-hidden bg-background text-foreground p-6 sm:p-10">
+      <div className="h-full min-h-0">
+        <ZipUnzipper />
+      </div>
+    </main>
   );
 }

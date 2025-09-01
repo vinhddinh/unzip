@@ -89,8 +89,8 @@ export default function ZipUnzipper() {
     : [];
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <Card>
+    <div className="h-full max-h-full w-full max-w-4xl mx-auto">
+      <Card className="max-h-full flex flex-col">
         <CardHeader>
           <CardTitle>Recursive ZIP Unzipper</CardTitle>
           <CardDescription>
@@ -98,7 +98,7 @@ export default function ZipUnzipper() {
             folder structure.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="max-h-full flex-auto min-h-0 flex flex-col">
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -152,7 +152,7 @@ export default function ZipUnzipper() {
           )}
 
           {files && !busy && (
-            <div className="mt-6">
+            <div className="mt-3 flex-auto min-h-0 flex flex-col">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   Extracted {entries.length} files • Total{" "}
@@ -162,8 +162,8 @@ export default function ZipUnzipper() {
                   <Button onClick={handleDownloadZip}>Download as ZIP</Button>
                 </div>
               </div>
-              <div className="mt-3 border rounded-md border-neutral-200 dark:border-neutral-800">
-                <ScrollArea className="h-72">
+              <div className="mt-3 border rounded-md border-neutral-200 dark:border-neutral-800 flex-auto min-h-0 flex flex-col">
+                <ScrollArea className="flex-auto min-h-0 overflow-y-scroll">
                   <ul className="text-sm">
                     {entries.map((p) => (
                       <li
